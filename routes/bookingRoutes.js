@@ -10,5 +10,7 @@ router.get('/', authenticateToken, requireAdmin, bookingController.getAllBooking
 router.get('/:id', authenticateToken, bookingController.getBookingById);
 router.put('/:id', authenticateToken, bookingController.updateBooking);
 router.delete('/:id', authenticateToken, requireAdmin, bookingController.deleteBooking);
+router.post('/:id/approve-reassign', authenticateToken, bookingController.approveReassign);
+router.post('/:id/decline-reassign', authenticateToken, bookingController.declineReassign);
 
 module.exports = router;
