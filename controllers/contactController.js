@@ -1,25 +1,38 @@
 const { db } = require('../config/db');
 const { createNotification } = require('./notificationController');
+const email = require('../utils/emailService');
+const { getSettings } = require('../utils/settingsHelper');
 
 exports.sendMessage = async (req, res, next) => {
   try {
-    const { name, email, message } = req.body;
-    if (!name || !email || !message)
+    const { name, email: senderEmail, message } = req.body;
+    if (!name || !senderEmail || !message)
       return res.status(400).json({ error: 'Name, email and message are required' });
 
     await db.query(
       'INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)',
-      [name, email, message]
+      [name, senderEmail, message]
     );
 
-    const [admins] = await db.query("SELECT id FROM users WHERE role = 'admin' AND is_active = TRUE");
+    const settings = await getSettings();
+    const [admins] = await db.query("SELECT id, email FROM users WHERE role = 'admin' AND is_active = TRUE");
+
     for (const admin of admins) {
+      // In-app notification
       await createNotification(
         admin.id,
         `📩 New Contact Message from ${name}`,
-        `${email} says: "${message.slice(0, 120)}${message.length > 120 ? '...' : ''}"`,
+        `${senderEmail} says: "${message.slice(0, 120)}${message.length > 120 ? '...' : ''}"`,
         'system'
       );
+      // Email notification
+      await email.sendContactMessageToAdmin({
+        to: admin.email,
+        senderName: name,
+        senderEmail,
+        message,
+        clinicName: settings.site_name || 'MediBook',
+      });
     }
 
     res.json({ message: 'Message sent successfully' });

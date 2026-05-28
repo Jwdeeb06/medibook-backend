@@ -33,7 +33,7 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/patients',  require('./routes/patientRoutes'));
 app.use('/api/contact', require('./routes/contactRoutes'));
-
+app.use('/api/export', require('./routes/exportRoutes'));
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 
